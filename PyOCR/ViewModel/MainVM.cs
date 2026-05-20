@@ -46,8 +46,7 @@ public partial class MainVM : ObservableObject
         _ = InitializeAsync();
     }
 
-    // ─── Server ────────────────────────────────────────────────────────────────
-
+   
     private async Task InitializeAsync()
     {
         // Already responding — nothing to do.
@@ -147,8 +146,7 @@ public partial class MainVM : ObservableObject
         SetStatus("Server ready. Drop or browse an image to start.", "#22C55E", "Ready");
     }
 
-    // ─── Commands ──────────────────────────────────────────────────────────────
-
+    
     [RelayCommand]
     private void Browse()
     {
@@ -181,8 +179,7 @@ public partial class MainVM : ObservableObject
     partial void OnHasResultChanged(bool value) => CopyCommand.NotifyCanExecuteChanged();
     partial void OnHasImageChanged(bool value)  => ClearCommand.NotifyCanExecuteChanged();
 
-    // ─── OCR pipeline ──────────────────────────────────────────────────────────
-
+   
     private async Task ProcessImageAsync(string path)
     {
         if (IsProcessing) return;
@@ -241,8 +238,9 @@ public partial class MainVM : ObservableObject
 
     private static async Task<string> SendToServerAsync(string imagePath)
     {
-        await using var fs         = File.OpenRead(imagePath);
-        var             imgContent = new StreamContent(fs);
+        await using var fs = File.OpenRead(imagePath);
+
+        var imgContent = new StreamContent(fs);
         imgContent.Headers.ContentType = new MediaTypeHeaderValue(GetMimeType(imagePath));
 
         using var form = new MultipartFormDataContent();
@@ -254,14 +252,17 @@ public partial class MainVM : ObservableObject
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
         foreach (var key in new[] { "text", "result", "output" })
+        {
             if (doc.RootElement.TryGetProperty(key, out var val))
+            {
                 return val.GetString() ?? string.Empty;
+            }
+        }
 
         return json;
     }
 
-    // ─── Helpers ───────────────────────────────────────────────────────────────
-
+    
     private void SetStatus(string message, string hexColor, string label)
     {
         Application.Current.Dispatcher.InvokeAsync(() =>
